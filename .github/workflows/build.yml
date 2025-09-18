@@ -1,5 +1,5 @@
 name: CI
-
+# This was forked from a file written by (@oscgonfer) on Nov. 7th, 2023 (the history was lost)
 on:
   pull_request:
     branches:
@@ -13,55 +13,7 @@ on:
     - hardware/**
 
 jobs:
-  build:
-    name: Run Tests
-    runs-on: "${{ matrix.os }}"
-    # runs-on: "ubuntu-latest"
-    strategy:
-      fail-fast: true
-      matrix:
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        # python-version: ["3.7", "3.8", "3.9"]
-
-    steps:
-
-    - name: Check out the commit
-      uses: actions/checkout@v3
-      with:
-        submodules: 'true'
-
-    - name: Cache pip
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Select Python 3.7
-      uses: actions/setup-python@v3
-      with:
-        # python-version: ${{ matrix.python-version }}
-        python-version: "3.8"
-
-    - name: Install PlatformIO
-      run: |
-        pip install -U -r tools/requirements.txt
-        pio upgrade --dev
-        pio pkg update --global
-
-    - name: Run Builds
-      run: |
-        python make.py build sam --env all esp -v
-
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/') && job.status == 'success' && github.ref == 'refs/heads/master'
-      with:
-        files: |
-          bin/*
-
-
+  # This is was first written by Raz Tamim (@raztam) on Aug. 12th, 2025 (the history was lost)
   clang_checks:
     name: Clang Format & Tidy
     runs-on: ubuntu-latest
