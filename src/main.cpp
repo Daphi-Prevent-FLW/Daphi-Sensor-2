@@ -10,15 +10,54 @@
  *     https://randomnerdtutorials.com/esp32-mqtt-publish-subscribe-arduino-ide/
  */
 
-/** TODOs
- * 1. create a display file to swithc between computer only, led only or both (the non-chosen should not be complied using if constexpr? [C++17])
- * 2. merge the calibration into the normal flow
- * 3. convert the U8g2lib-using code into computer display
- * 4. put the networkings in a different file
- * 5. put the EEPROM in a different file (It retains data when power's off. It's used for calibration data, wifi networking and passwords, etc)
- * 6. make a LED and a button for I/O: callibration, initail configs, etc. 
- */
 
+#include "config.h"         // some constants and configurations
+#include "device_status.h"  // flags about device status and their function
+#include "display.h"        // handles the display task
+#include "events.h"         // handles events
+#include "sensors.h"        // handles data from the event
+#include "types.h"          // project-specific types and structs
+#include "queue.h"          // queue class
+#include "data.h"           // functions to handle the sensor data table
+#include "scheduler.h"      // functions to handle scheduling tasks, like sending data to server
+#include "networkings.h"    // functions to handle networking tasks
+
+#include "freertos/FreeRTOS.h"  // esp32 built-in: multitasking header
+#include "freertos/task.h"      // esp32 built-in: multitasking header
+
+
+Queue<Event> eventsQueue(EVENTS_QUEUE_LENGTH);
+/* Create messages queue and led-patterns queue */
+
+void setup() {
+    /* Initiate pinMode() here */
+
+    xTaskCreate(getLoadCellData); // on "sensors.h"
+    xTaskCreate(display);         // on "display.h"
+    xTaskCreate(scheduler);       // on "scheduler.h"
+    xTaskCreate(networkings);     // on "networkings.h"
+}
+
+void loop() {
+    listenToEvents();
+    while (!eventsQueue.isEmpty()) {
+        Event event = eventsQueue.dequeue();
+        switch (event.eventType) {
+            case EventType::Setup: onSetup(); break;    // - If already activated, device should be de activated for setup, and then (re)activeted. so events queue should be (first to dequeued: ) ... deactivte, setup, activate, ... (last)
+            case EventType::Activate: onActivate(); break;
+            case EventType::Deactivate: onDeactivate(); break;
+            case EventType::CheckDeviceStatus: onCheckDeviceStatus(); break;
+            case EventType::CalibrateLoadCell: onCalibrateLoadCell(); break;
+            case EventType::ChangeTxTimes: onChangeTxTimes(); break;
+            case EventType::SendLogFile: onSendLogFile(); break;    // if no device status is logged, or if a device status is logged with errors, then first call onCheckDeviceStatus, then call onSendLogFile
+            case EventType::SendData: onSendData(); break; // should immidietly enqueue EventType::SendLogFile with priority 1 (highest)
+            case EventType::CalibrateClock: onCalibrateClock(); break;
+        }
+    }
+}
+
+/* Old Code to take snippets from
+ 
 #include <HX711_ADC.h>
 #include <EEPROM.h>
 #include <Wire.h>
@@ -28,7 +67,7 @@
 #include <PubSubClient.h>
 
 
-/************************* CIRCUIT CONFIGS *************************/
+/************************* CIRCUIT CONFIGS ************************* /
 // HX711 GPIO pins
 constexpr int HX711_DOUT = 2; // MCU > HX711 dout pin, must be external interrupt capable!
 constexpr int HX711_SCK = 3;  // MCU > HX711 sck pin
@@ -50,7 +89,7 @@ unsigned long t = 0;
 constexpr int serialPrintInterval = 100;
 volatile boolean newDataReady;
 
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=* /U8X8_PIN_NONE);
 bool enableBootDisplay = true;
 
 // Replace the next variables with your SSID/Password combination
@@ -344,182 +383,5 @@ void loop()
   }
 }
 
-
-/************************* CALLIBRATION FUNCTIONS *************************/
-/*
-   This example file shows how to calibrate the load cell and optionally store the calibration
-   value in EEPROM, and also how to change the value manually.
-   The result value can then later be included in your project sketch or fetched from EEPROM.
-*/
-/*
-#include <HX711_ADC.h>
-#include <EEPROM.h>
-#include <SPI.h>
-
-
-// HX711 constructor:
-HX711_ADC LoadCell(HX711_dout, HX711_sck);
-
-constexpr int calVal_eepromAdress = 0;
-unsigned long t = 0;
-
-void calibrate()
-{
-  Serial.println("***");
-  Serial.println("Start calibration:");
-  Serial.println("Place the load cell an a level stable surface.");
-  Serial.println("Remove any load applied to the load cell.");
-  Serial.println("Send 't' from serial monitor to set the tare offset.");
-
-  boolean resume = false;
-  while (!resume)
-  {
-    LoadCell.update();
-    if (Serial.available() > 0)
-    {
-      if (Serial.available() > 0)
-      {
-        char inByte = Serial.read();
-        if (inByte == 't')
-          LoadCell.tareNoDelay();
-      }
-    }
-    if (LoadCell.getTareStatus() == true)
-    {
-      Serial.println("Tare complete");
-      resume = true;
-    }
-  }
-
-  Serial.println("Now, place your known mass on the loadcell.");
-  Serial.println("Then send the weight of this mass in grams (i.e. 100.0) from the serial monitor.");
-
-  float known_mass = 0;
-  resume = false;
-  while (resume == false)
-  {
-    LoadCell.update();
-    if (Serial.available() > 0)
-    {
-      known_mass = Serial.parseFloat();
-      if (known_mass != 0)
-      {
-        Serial.print("Known mass is: ");
-        Serial.println(known_mass);
-        resume = true;
-      }
-    }
-  }
-  // refresh the dataset to be sure that the known mass is measured correct
-  LoadCell.refreshDataSet();
-  // get the new calibration value
-  float newCalibrationValue = LoadCell.getNewCalibration(known_mass);
-
-  Serial.print("New calibration value has been set to: ");
-  Serial.print(newCalibrationValue);
-  Serial.println(", use this as calibration value (calFactor) in your project sketch.");
-
-  Serial.print("Save this value to EEPROM adress ");
-  Serial.print(calVal_eepromAdress);
-  Serial.println("? y/n");
-
-  resume = false;
-  while (!resume)
-  {
-    if (Serial.available() > 0)
-    {
-      char inByte = Serial.read();
-      if (inByte == 'y')
-      {
-        EEPROM.begin(512);
-        EEPROM.put(calVal_eepromAdress, newCalibrationValue);
-        EEPROM.commit();
-        EEPROM.get(calVal_eepromAdress, newCalibrationValue);
-        Serial.print("Value ");
-        Serial.print(newCalibrationValue);
-        Serial.print(" saved to EEPROM address: ");
-        Serial.println(calVal_eepromAdress);
-        resume = true;
-      }
-      else if (inByte == 'n')
-      {
-        Serial.println("Value not saved to EEPROM");
-        resume = true;
-      }
-    }
-  }
-
-  Serial.println("End calibration");
-  Serial.println("***");
-  Serial.println("To re-calibrate, send 'r' from serial monitor.");
-  Serial.println("For manual edit of the calibration value, send 'c' from serial monitor.");
-  Serial.println("***");
-}
-
-void setup()
-{
-  Serial.begin(9600);
-  delay(10);
-  Serial.println();
-  Serial.println("Starting...");
-
-  LoadCell.begin();
-  unsigned long stabilizingtime = 2000; // preciscion right after power-up can be improved by adding a few seconds of stabilizing time
-  boolean _tare = true;                 // set this to false if you don't want tare to be performed in the next step
-  LoadCell.start(stabilizingtime, _tare);
-  if (LoadCell.getTareTimeoutFlag() || LoadCell.getSignalTimeoutFlag())
-  {
-    Serial.println("Timeout, check MCU>HX711 wiring and pin designations");
-    while (1)
-      ;
-  }
-  else
-  {
-    LoadCell.setCalFactor(1.0); // user set calibration value (float), initial value 1.0 may be used for this sketch
-    Serial.println("Startup is complete");
-  }
-  while (!LoadCell.update())
-    ;
-  calibrate(); // start calibration procedure
-}
-
-void loop()
-{
-  static boolean newDataReady = false;
-  constexpr int serialPrintInterval = 500; // increase value to slow down serial print activity
-
-  // check for new data/start next conversion:
-  if (LoadCell.update())
-    newDataReady = true;
-
-  // get smoothed value from the dataset:
-  if (newDataReady)
-  {
-    if (millis() > t + serialPrintInterval)
-    {
-      float i = LoadCell.getData();
-      Serial.print("Load_cell output val: ");
-      Serial.println(i);
-      newDataReady = 0;
-      t = millis();
-    }
-  }
-
-  // receive command from serial terminal
-  if (Serial.available() > 0)
-  {
-    char inByte = Serial.read();
-    if (inByte == 't')
-      LoadCell.tareNoDelay(); // tare
-    else if (inByte == 'r')
-      calibrate(); // calibrate
-  }
-
-  // check if last tare operation is complete
-  if (LoadCell.getTareStatus() == true)
-  {
-    Serial.println("Tare complete");
-  }
-}
 
 */
