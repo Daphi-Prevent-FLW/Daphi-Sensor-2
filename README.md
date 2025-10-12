@@ -21,10 +21,10 @@ To ensure code quality and consistency, we provide a Docker-based environment fo
     docker build -t daphi-clang-checks guidelines_checks
     ```
 
-2. **Run checks for a specific file** (replace `esp/src/SckESP.cpp` with your file):
+2. **Run checks for a specific file** (replace `src/main.cpp` with your file):
 
     ```sh
-    docker run --rm -v "$PWD":/workspace -w /workspace daphi-clang-checks sh /workspace/guidelines_checks/run-clang-checks.sh esp/src/SckESP.cpp
+    docker run --rm -v "$PWD":/workspace -w /workspace daphi-clang-checks sh /workspace/guidelines_checks/run-clang-checks.sh src/main.cpp
     ```
 
    You can specify multiple files separated by spaces.
