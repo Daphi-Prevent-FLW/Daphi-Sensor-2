@@ -1,8 +1,5 @@
 #pragma once
 
-// Please note that there're many files, each handles differnet matter.
-// Every aspect that requires one the following parts, need to be implemented using the given interface
-// if no interface is given (comments-only file) please notify us.
 #include "config.h"         // some constants and configurations
 #include "device_status.h"  // flags about device status and their function
 #include "display.h"        // handles the display task
@@ -40,9 +37,10 @@ void listenToEvents();
  *  - None. If input is needed, you may add input parametrs.
  * 
  * Behaviour:
- *  1. If no wifi networks are stored, the device asks for the number of wifi networks to be prompted.
- *      1.1. The device asks repeatedly for the SSID and password of the network - the user answers
- *          - All stored in the EEPROM; passwords should be stored safely
+ *  1. If no wifi networks are stored, the device asks for the number of wifi networks to be prompted (bounded by config.h::MAX_NUMBER_OF_WIFI_NETWORKS)
+ *      1.1. The device asks repeatedly for the SSID and password of the network (see config.h::wifiNetwroks) - the user answers
+ *          - All stored in the EEPROM
+ *          - passwords should be stored safely. currently there's no hash defined. please choose a safe storing method, and change the types.h::WifiNetwork accordingly. use supplementary functions as needed. 
  *  2. If there are wifi networks, the device asks if user wants to add or delete a network (changing password is by delete and re-write)
  *      2.1. if delete, then the device prompts all known networks (SSID only, no passwords) - the user enters the SSIDs,
  *              seperated by spaces, of the networks to be deleted, or returns (i.e., presses enter) if no network's to be deleted.
@@ -140,7 +138,7 @@ void onActivate();
  * 
  * Display:
  *  - Display is LEDOnly, ComputerOnly or Both as defined before compilation.
- *  - If it's LEDOnly / Both, a LEDPattern of activation should be displayed.
+ *  - If it's LEDOnly / Both, a LEDPattern of deactivation should be displayed.
  *  - If it's ComputerOnly / Both, the following msgs should be presented to the user:
  *      - Deactivation begins
  *      - Sending to the main server <IP of the main server>: <deviceID> <datetime stamp> deactivated
@@ -182,7 +180,7 @@ void onDeactivate();
  * 
  * Display:
  *  - Display is LEDOnly, ComputerOnly or Both as defined before compilation.
- *  - If it's LEDOnly / Both, a LEDPattern of activation should be displayed.
+ *  - If it's LEDOnly / Both, a LEDPattern of checkDeviceStatus should be displayed.
  *  - If it's ComputerOnly / Both, the following msgs should be presented to the user:
  *      - Device status check begins
  *      - (list each check with its result. Highlight critical errors)
@@ -401,17 +399,19 @@ void loop()
 
 */
 
-/** Change-transmission-times logic
- * This is used by the server to regulate load, and spread it evenly along the day.
- * Tx is the abbreviation for transmit, Rx is for receive.
+/** Change configurations logic
+ * This is used by the server to change some configurations (see config.h):
+ * - TxTimes: to regulate load, and spread it evenly along the day. (2 times in total, each time is of 24 hours format)
+ * - MxResendsToSrv: to regulate the networking workload in the sensor.
  * 
  * Input:
- *  - None. If input is needed, you may add input parametrs.
+ *  - None. If input is needed, you may add input parameters.
  * 
  * Behaviour:
- *  1. Device asks server for the tx times (2 in total, each time is of 24 hours format)
- *  2. it stores them in an array in the EEPROM
- *  3. it tells the scheduler to reschedul its events.
+ *  1. Device asks server for a configuration dictionary
+ *  2. it parses the dictionary and re-initialize the variables
+ *  2. it stores them in the EEPROM (or other non-voltile memory)
+ *  3. if a configuraion regarding time was changed, it tells the scheduler to reschedul its events.
  * 
  * Output:
  *  - None.
@@ -425,13 +425,13 @@ void loop()
  * Notes:
  *  1. You may add more constants, functions, classes, etc. as needed.
  */
-void onChangeTxTimes();
+void onChangeConfigs();
 
 /** Send log file logic
  * log files are sent to the server regularly, with the data, or when needed to to diagnose problems.
  * 
  * Input:
- *  - None. If input is needed, you may add input parametrs.
+ *  - None. If input is needed, you may add input parameters.
  * 
  * Behaviour:
  *  1. generate a checksum of the log file
@@ -484,7 +484,7 @@ void onSendLogFile();
 void onSendData();
 
 /** clock calibration logic
- * Calibration's to be performed after once a 24 hours.
+ * Calibration's to be performed once in a 24 hours.
  * 
  * Input:
  *  - None. If input is needed, you may add input parametrs.

@@ -7,7 +7,7 @@
  * Behaviour:
  *  1. read (digital) data from the input pins. see config.h constants about HX711 for more info.
  *      - validate input is not corrupted
- *  2. log to the sensor-table with HHmm (24 hours format, no ":") timestamp. see data.h for more info.
+ *  2. log to the sensor-table with timestamp. see data.h for more info.
  *  3. sleep until the next interval (config.h senseInterval)
  * 
  * Output:
@@ -16,6 +16,7 @@
  * Notes:
  *  1. You may add more constants, functions, classes, etc. as needed.
  *  2. This process isn't on the main process (aka, void loop) to make sure no gaps, that may result from other processes, will appear in the data.
+ *  3. IMPORTANT: in order to prevent bugs, after each  
  */
 void getLoadCellData(bool isActive);
 

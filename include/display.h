@@ -13,8 +13,7 @@ void blinkLed(LEDPattern ledPattern);
  * 
  * Behaviour:
  *  1. Initiate the requested display mode(s). Implement initDisplay. Display mode will NOT change during runtime.
- *  2. Dequeue the messages\led-patterns queue (if empty, msg = "" and ledPattern = LEDPattern(LEDPatternType::None))
- *      - a message struct should be defined similarly to LEDPattern (with static 0 priority) in types.h
+ *  2. Dequeue the displayQueue (if empty, msg = "" and ledPattern = LEDPattern(LEDPatternType::None))
  *  3. Display the text message \ light the led according to the pattern
  * 
  * Output:
@@ -25,4 +24,4 @@ void blinkLed(LEDPattern ledPattern);
  *  2. This process isn't on the main process (aka, void loop) to make sure messages and blinkings will be displayed when needed with no delays.
  *  3. It's prefered that the blinking logic is designed modularly, so blinking patterns are changeable easely in the future (i.e., patterns on future differnet outputs, different leds, changing the pattern, etc)
  */
-void display(const char *msg = "", LEDPattern ledPattern = LEDPattern(LEDPatternType::None));
+void display();

@@ -27,7 +27,8 @@
 
 
 Queue<Event> eventsQueue(EVENTS_QUEUE_LENGTH);
-/* Create messages queue and led-patterns queue */
+Queue<NetworkTask> networkQueue(NETWORK_QUEUE_LENGTH);
+Queue<DisplayTask> displayQueue(DISPLAY_QUEUE_LENGTH);
 
 void setup() {
     /* Initiate pinMode() here */
@@ -43,12 +44,12 @@ void loop() {
     while (!eventsQueue.isEmpty()) {
         Event event = eventsQueue.dequeue();
         switch (event.eventType) {
-            case EventType::Setup: onSetup(); break;    // - If already activated, device should be de activated for setup, and then (re)activeted. so events queue should be (first to dequeued: ) ... deactivte, setup, activate, ... (last)
+            case EventType::Setup: onSetup(); break;    // - If already activated, device should be deactivated for setup, and then (re)activeted. so events queue should be (first to dequeued: ) ... deactivte, setup, activate, ... (last)
             case EventType::Activate: onActivate(); break;
             case EventType::Deactivate: onDeactivate(); break;
             case EventType::CheckDeviceStatus: onCheckDeviceStatus(); break;
             case EventType::CalibrateLoadCell: onCalibrateLoadCell(); break;
-            case EventType::ChangeTxTimes: onChangeTxTimes(); break;
+            case EventType::ChangeConfigs: onChangeConfigs(); break;
             case EventType::SendLogFile: onSendLogFile(); break;    // if no device status is logged, or if a device status is logged with errors, then first call onCheckDeviceStatus, then call onSendLogFile
             case EventType::SendData: onSendData(); break; // should immidietly enqueue EventType::SendLogFile with priority 1 (highest)
             case EventType::CalibrateClock: onCalibrateClock(); break;

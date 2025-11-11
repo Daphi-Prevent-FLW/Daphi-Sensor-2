@@ -14,9 +14,9 @@ public:
     void enqueue(const T &item);
     T dequeue();
     bool isEmpty();
+    bool isFull();  // if isFull returns true, write a note in the logfile
 
 private:
-    bool isFull();
     void sortByPriority();
 };
 

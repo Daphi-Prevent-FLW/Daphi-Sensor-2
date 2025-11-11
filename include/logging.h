@@ -14,10 +14,11 @@
  * deviceID: <deviceID>
  * 
  * date: <date>
- * <here all data should be listed, see onCheckDeviceStatus for more info>
+ * <timestamp> <here all data should be listed, see onCheckDeviceStatus for more info>
+ * <timestamp> <here all data should be listed, see onCheckDeviceStatus for more info>
  * 
  * date: <date>
- * <here all data should be listed, see onCheckDeviceStatus for more info>
+ * <timestamp> <here all data should be listed, see onCheckDeviceStatus for more info>
  */
 
 /** Here there's a problem that should be adressed:
@@ -33,8 +34,6 @@ class LogFile {
         void addDate(dateType date);
         const char *readLogFile();
         void deleteLogFile();
-
-    private:
         bool isFull();  // should alert right before it's full and log message: "logfile is full, yet more info is tried to be logged"
 };
 
