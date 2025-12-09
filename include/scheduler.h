@@ -22,7 +22,7 @@
  *  - void: No output
  * 
  * Notes:
- *  1. The weight sensing is done in a different task, in order to make sure it's always preformed.
+ *  1. The weight sensing is done in a different task, in order to make sure it's always performed.
  *  2. You may add more constants, functions, classes, etc. as needed.
  *  3. all times are stored in the non-voltile memory. (see config.h for more info.)
  */

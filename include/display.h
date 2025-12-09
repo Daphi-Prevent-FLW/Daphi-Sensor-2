@@ -6,7 +6,7 @@ void initDisplay(DisplayMode displayMode);
 void displayOnComputer(const char *msg);
 void blinkLed(LEDPattern ledPattern);
 
-/** Process responsible for displaying outputs to the user
+/** Task responsible for displaying outputs to the user
  * Input:
  *  - const char *msg: the message to be presented to the user (if DisplayMode == ComputerOnly or DisplayMode == Both)
  *  - LEDPattern ledPattern: a blinking pattern (if DisplayMode == LEDOnly or DisplayMode == Both)

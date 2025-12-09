@@ -16,7 +16,6 @@
  * Notes:
  *  1. You may add more constants, functions, classes, etc. as needed.
  *  2. This process isn't on the main process (aka, void loop) to make sure no gaps, that may result from other processes, will appear in the data.
- *  3. IMPORTANT: in order to prevent bugs, after each  
  */
 void getLoadCellData(bool isActive);
 

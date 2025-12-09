@@ -19,10 +19,10 @@
 class DataTable {
     public:
         DataTable(uint16_t capacity);       // For now the size should be 14 hours * 60 readings an hour = 840 * struct Record size of space. the table is saved on the flash not RAM
-        void createDataTable();             // an empty data table is a table where all weightType wieghts are set to 0 and all TimeType recordTime are set to 0xFFFF
+        void createDataTable();             // an empty data table is a table where all weightType weight-measurments are set to 0 and all TimeType recordTime are set to 0xFFFF
         void updateTable(Record record);    // when updating the table, meaning, creating a new record, it should look up for the first record whose TimeType recordTime is set to 0xFFFF and overwrite it.
         Record *readTable();                // returns an array with the length of the number of records, each item is a record. it should NOT return any record with TimeType recordTime set to 0xFFFF
-        void deleteTable();                 // reset all records to TimeType recordTime = 0, and weightType wieghts = 0
-        bool isFull();                      // if non of the records' TimeType recordTime is 0. if isFull returns true, write a note in the logfile
+        void deleteTable();                 // reset all records to TimeType recordTime = 0xFFFF, and weightType wieghts = 0
+        bool isFull();                      // if non of the records' TimeType recordTime is 0xFFFF. if isFull returns true, write a note in the logfile
 };
 

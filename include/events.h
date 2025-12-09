@@ -411,7 +411,7 @@ void loop()
  *  1. Device asks server for a configuration dictionary
  *  2. it parses the dictionary and re-initialize the variables
  *  2. it stores them in the EEPROM (or other non-voltile memory)
- *  3. if a configuraion regarding time was changed, it tells the scheduler to reschedul its events.
+ *  3. if a configuraion regarding time was changed, it tells the scheduler to reschedule its events.
  * 
  * Output:
  *  - None.

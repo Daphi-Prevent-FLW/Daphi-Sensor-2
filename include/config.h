@@ -23,8 +23,8 @@ constexpr gpio BUTTON           = 5;    // make sure it's deepsleep wakeup enaba
 constexpr gpio BATTERY_POWER    = 0;    // change 0 to a valid number
 
 
-/******  Varialbes  ******/
-/** All should be stored in a non-voltile memory */
+/******  Variables  ******/
+/** All should be stored in a non-volatile memory */
 uint8_t MxResendsToSrv = 5;                 // the maximum allowed number of trials to send data to server before it tries no more
 TimeType TxTimes[NUMBER_OF_TX_TIMES] = { 0 * 60, 12 * 60 };   // transmission (Tx) times to server in minutes
 WifiNetwork wifiNetwroks[MAX_NUMBER_OF_WIFI_NETWORKS];
